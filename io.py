@@ -11,8 +11,12 @@ class database:
         self.sql = self.conn.cursor()
 
     def execute(self, query, *params):
-        self.sql.execute(query, params)
-        data = self.sql.fetchall()
+        if params is None:
+            self.sql.execute(query)
+            data = self.sql.fetchall()
+        else:    
+            self.sql.execute(query, params)
+            data = self.sql.fetchall()
         if data:
             return data[0]
 
@@ -95,3 +99,4 @@ def diagnosis_info(message, language):
 
 
 bot.polling(none_stop=True)
+ # type: ignore
