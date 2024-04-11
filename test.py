@@ -10,16 +10,12 @@ from telebot import types
 TOKEN = "5506364900:AAEFS2ap5AXMz3xCOnzT3jDM0OVTDWmg1pA"
 bot = telebot.TeleBot(TOKEN)
 
-# Замените 'DOCTOR_USERNAME' на username вашего врача
 doctor_username = '@akbarjon0401'
 
-# Словарь для хранения языка каждого пользователя
 users_languages = {}
 
-# Словарь для хранения ответов каждого пользователя
 user_answers = {}
 
-# Словарь для хранения текущего вопроса для каждого пользователя
 user_current_question = {}
 
 
@@ -79,14 +75,15 @@ def tajik_survey(chat_id):
     
     ask_question(chat_id, questions, user_current_question)
 
+
 def ask_question(chat_id, questions, user_current_question):
     if user_current_question[chat_id] < len(questions):
         msg = bot.send_message(chat_id, questions[user_current_question[chat_id]])
         bot.register_next_step_handler(msg, lambda m: process_answer(chat_id, questions, m.text, user_current_question))
     else:
-        # Если все вопросы заданы, сохраняем отчет
         save_report(chat_id, users_languages[chat_id], questions, user_answers[chat_id])
-        user_answers[chat_id] = user_answers[chat_id][:1]   # Удаляем ответы пользователя
+        user_answers[chat_id] = user_answers[chat_id][:1]
+
 
 def process_answer(chat_id, questions, answer, user_current_question):
     if chat_id not in user_answers:
@@ -95,29 +92,28 @@ def process_answer(chat_id, questions, answer, user_current_question):
     user_current_question[chat_id] += 1
     ask_question(chat_id, questions, user_current_question)
 
+
 def save_report(chat_id, language, questions, answers):
     conn = sqlite3.connect('reports.db')
     sql = conn.cursor()
 
-    # Создание таблицы отчетов, если ее нет
     sql.execute('''CREATE TABLE IF NOT EXISTS reports
                  (chat_id TEXT, language TEXT, question1 TEXT, question2 TEXT, question3 TEXT, question4 TEXT)''')
 
-    # Вставка отчета в базу данных
     sql.execute("INSERT INTO reports VALUES (?, ?, ?, ?, ?, ?)", (str(chat_id), language, answers[0], answers[1], answers[2], answers[3]))
 
-    # Сохранение изменений и закрытие соединения
     conn.commit()
     conn.close()
     
     
 def get_doctor_chat_id(username):
-    # Получение chat_id врача по его username
     doctor = bot.get_chat(username)
     return doctor.id
 
 notification_thread = threading.Thread(target=schedule_survey)
 notification_thread.start()
+
+
 if __name__ == "__main__":
     # schedule_survey()
     print("bot started")
