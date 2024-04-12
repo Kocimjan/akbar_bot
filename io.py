@@ -64,11 +64,12 @@ def handle_language_selection(message):
         bot.send_message(message.chat.id, "👨‍⚕️")
         users_languages[chat_id] = "ru"
 
-    elif message.text == '🇹🇯 Тоҷикӣ':
+    else:
         bot.send_message(message.chat.id, "👨‍⚕️")
         users_languages[chat_id] = "tj"
 
     main_menu(message, users_languages[chat_id])
+
 
 @bot.message_handler(func=lambda message: True)
 def btn_handler(message):
@@ -83,7 +84,6 @@ def btn_handler(message):
             bot.send_message(message.chat.id, "Лутфан, барои паймоиш тугмаҳоро истифода баред.")
 
 
-
 def main_menu(message, language):
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     if language == "ru":
@@ -93,7 +93,6 @@ def main_menu(message, language):
         markup.row("Точикиша хдат пур кун/ :D/ ):)):)")
         bot.send_message(message.chat.id, "Меню кушодааст", reply_markup=markup)
     
-
 
 def diagnosis_info(message, language):
     disease = message.text.lower()
@@ -123,22 +122,22 @@ def diagnosis_info(message, language):
 
 
 
-def send_survey():
-    for chat_id in users_languages:
-        if users_languages[chat_id] == 'Тоҷикӣ':
-            tajik_survey(chat_id)
-        elif users_languages[chat_id] == 'Русский':
-            russian_survey(chat_id)
-
 
 def schedule_survey():
-    schedule.every().day.at("07:39").do(send_survey)
-    schedule.every().day.at("14:55").do(send_survey)
-    schedule.every().day.at("20:00").do(send_survey)
+    schedule.every().day.at("10:29").do(send_survey)
+    schedule.every().day.at("10:32").do(send_survey)
+    schedule.every().day.at("10:35").do(send_survey)
 
     while True:
         schedule.run_pending()
         time.sleep(1)
+
+def send_survey():
+    for chat_id in users_languages:
+        if users_languages[chat_id] == 'tj':
+            tajik_survey(chat_id)
+        elif users_languages[chat_id] == 'ru':
+            russian_survey(chat_id)
 
 
 def russian_survey(chat_id):
@@ -148,6 +147,7 @@ def russian_survey(chat_id):
         user_current_question[chat_id] = 1
     
     ask_question(chat_id, questions, user_current_question)
+
 
 def tajik_survey(chat_id):
     questions = ["Номи шумо чист?", "Беморӣ кардаанд?", "Соли шумо чанд буд?", "Ахволи шумо чи хел аст?"]
@@ -167,7 +167,6 @@ def ask_question(chat_id, questions, user_current_question):
         user_answers[chat_id] = user_answers[chat_id][:1]
 
 
-
 def process_answer(chat_id, questions, answer, user_current_question):
     if chat_id not in user_answers:
         user_answers[chat_id] = []
@@ -176,9 +175,8 @@ def process_answer(chat_id, questions, answer, user_current_question):
     ask_question(chat_id, questions, user_current_question)
 
 
-
 def save_report(chat_id, language, questions, answers):
-    conn = sqlite3.connect('reports.db')
+    conn = sqlite3.connect('diseases_info.db')
     sql = conn.cursor()
 
     sql.execute('''CREATE TABLE IF NOT EXISTS reports
@@ -188,12 +186,11 @@ def save_report(chat_id, language, questions, answers):
 
     conn.commit()
     conn.close()
+    bot.send_message(chat_id, "Спасибо За Участие в опросе!")
     
 
 notification_thread = threading.Thread(target=schedule_survey)
 notification_thread.start()
-
-
 
 
 if __name__ == "__main__":
