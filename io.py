@@ -5,10 +5,14 @@ import schedule
 import telebot
 from telebot import types
 
+TOKEN = "5506364900:AAEFS2ap5AXMz3xCOnzT3jDM0OVTDWmg1pA"
+bot = telebot.TeleBot(TOKEN)
 
 users_languages = {}
 user_answers = {}
+users_info = {}
 user_current_question = {}
+doctor_id = '6221642254'
 
 
 class database:
@@ -26,14 +30,12 @@ class database:
         if data:
             return data[0]
 
-    def conn_close(self):
+    def close(self):
         self.conn.close()
 
 
 db = database("diseases_info.db")
 
-TOKEN = "5506364900:AAEFS2ap5AXMz3xCOnzT3jDM0OVTDWmg1pA"
-bot = telebot.TeleBot(TOKEN)
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -55,11 +57,21 @@ def send_language_selection(message):
                      f"язык..."
                      f"\n\n👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇", reply_markup=markup)
 
+@bot.message_handler(commands=['opros'])
+def send(message):
+    for chat_id in users_languages:
+            if users_languages[chat_id] == 'tj':
+                tajik_survey(chat_id)
+            elif users_languages[chat_id] == 'ru':
+                russian_survey(chat_id)
+
 
 @bot.message_handler(func=lambda message: message.text == "🇷🇺 Русский" or message.text == "🇹🇯 Тоҷикӣ")
 def handle_language_selection(message):
     chat_id = message.chat.id
     users_languages[chat_id] = None
+    users_info[chat_id] = {}
+    users_info[chat_id]["username"] = message.from_user.username
     if message.text == '🇷🇺 Русский':
         bot.send_message(message.chat.id, "👨‍⚕️")
         users_languages[chat_id] = "ru"
@@ -140,6 +152,7 @@ def send_survey():
             russian_survey(chat_id)
 
 
+
 def russian_survey(chat_id):
     questions = ["Как вас зовут?", "Чем болеете?", "Ваш возраст?", "Как ваше самочувствие?"]
     user_current_question[chat_id] = 0
@@ -186,6 +199,8 @@ def save_report(chat_id, language, questions, answers):
 
     conn.commit()
     conn.close()
+    msg_text = f"Опрос от @{users_info[chat_id]['username']} \nВопрос: {questions[0]} Ответ: {answers[0]} \nВопрос: {questions[1]} Ответ: {answers[1]} \nВопрос:{questions[2]} Ответ: {answers[2]} \nВопрос:{questions[3]} Ответ: {answers[3]}"
+    bot.send_message(chat_id=doctor_id, text=msg_text)
     bot.send_message(chat_id, "Спасибо За Участие в опросе!")
     
 
