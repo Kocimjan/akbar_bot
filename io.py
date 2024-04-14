@@ -5,7 +5,7 @@ import schedule
 import telebot
 from telebot import types
 
-TOKEN = "5506364900:AAEFS2ap5AXMz3xCOnzT3jDM0OVTDWmg1pA"
+TOKEN = ""
 bot = telebot.TeleBot(TOKEN)
 
 users_languages = {}
